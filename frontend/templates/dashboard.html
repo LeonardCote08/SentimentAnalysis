@@ -1,0 +1,87 @@
+<!-- frontend/templates/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analysis Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Sentiment Analysis Dashboard</a>
+            <button id="refreshButton" class="btn btn-outline-light">Refresh Data</button>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Market Sentiment Overview</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="stockCards" class="row">
+                            <!-- Les cartes d'actions seront générées ici dynamiquement -->
+                            <div class="spinner-border text-primary mx-auto" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Sentiment History</h5>
+                        <div class="btn-group" role="group">
+                            {% for stock in stocks %}
+                            <button type="button" class="btn btn-sm btn-outline-primary stock-selector" data-symbol="{{ stock }}">{{ stock }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="sentimentChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Price Chart</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="priceChart" style="height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Recent Sentiment Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentItems">
+                            <p class="text-center">Select a stock to view recent sentiment items.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', path='/js/charts.js') }}"></script>
+</body>
+</html>

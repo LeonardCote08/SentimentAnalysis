@@ -1,29 +1,42 @@
-<!-- frontend/templates/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sentiment Analysis Dashboard</title>
+    <link rel="shortcut icon" href="{{ url_for('static', path='/img/favicon.png') }}" type="image/png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Sentiment Analysis Dashboard</a>
-            <button id="refreshButton" class="btn btn-outline-light">Refresh Data</button>
+            <a class="navbar-brand" href="#">
+                <i class="fa-solid fa-chart-line me-2"></i>
+                Sentiment Analysis Dashboard
+            </a>
+            <div class="d-flex">
+                <div id="notification-area" class="me-3"></div>
+                <button id="refreshButton" class="btn btn-outline-light">
+                    <i class="fa-solid fa-sync-alt me-1"></i> Refresh Data
+                </button>
+            </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid mt-4">
         <div class="row mb-4">
             <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Market Sentiment Overview</h5>
+                <div class="card main-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fa-solid fa-globe me-2"></i>Market Sentiment Overview</h5>
+                        <div class="badge bg-primary">
+                            <i class="fa-solid fa-clock me-1"></i>
+                            Last Update: <span id="lastUpdateTime">Today 13:00</span>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div id="stockCards" class="row">
@@ -37,40 +50,90 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
+        <!-- Tableau comparatif des actions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card main-card">
                     <div class="card-header">
-                        <h5>Sentiment History</h5>
-                        <div class="btn-group" role="group">
-                            {% for stock in stocks %}
-                            <button type="button" class="btn btn-sm btn-outline-primary stock-selector" data-symbol="{{ stock }}">{{ stock }}</button>
-                            {% endfor %}
+                        <h5><i class="fa-solid fa-table-columns me-2"></i>Stocks Comparison</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover comparison-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Stock</th>
+                                        <th>Current Price</th>
+                                        <th>Change (24h)</th>
+                                        <th>Sentiment Score</th>
+                                        <th>Positive</th>
+                                        <th>Negative</th>
+                                        <th>Neutral</th>
+                                        <th>Mentions</th>
+                                        <th>Prediction (24h)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparisonTableBody">
+                                    <!-- Le tableau sera rempli dynamiquement -->
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="sentimentChart" style="height: 300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Price Chart</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="priceChart" style="height: 300px;"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card">
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card main-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fa-solid fa-chart-line me-2"></i>Sentiment History</h5>
+                        <div>
+                            <div class="btn-group period-filter" role="group" aria-label="Period filter">
+                                <button type="button" class="btn btn-sm btn-outline-primary period-btn active" data-period="7">7d</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary period-btn" data-period="30">30d</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary period-btn" data-period="90">90d</button>
+                            </div>
+                            <div class="btn-group ms-2" role="group">
+                                <button type="button" class="btn btn-sm btn-primary stock-selector" data-symbol="AAPL">AAPL</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary stock-selector" data-symbol="TSLA">TSLA</button>
+                                <button type="button" class="btn btn-sm btn-outline-primary stock-selector" data-symbol="MSFT">MSFT</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="sentimentChart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card main-card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5><i class="fa-solid fa-dollar-sign me-2"></i>Price Chart</h5>
+                        <div id="priceChartLegend" class="d-flex align-items-center">
+                            <span class="legend-item">
+                                <span class="legend-color" style="background-color: rgb(75, 75, 192);"></span>
+                                Actual
+                            </span>
+                            <span class="legend-item ms-3">
+                                <span class="legend-color" style="background-color: rgba(75, 192, 75, 0.5);"></span>
+                                Predicted
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="priceChart" style="height: 350px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card main-card">
                     <div class="card-header">
-                        <h5>Recent Sentiment Items</h5>
+                        <h5><i class="fa-solid fa-comment-dots me-2"></i>Recent Sentiment Items</h5>
                     </div>
                     <div class="card-body">
                         <div id="recentItems">
@@ -79,8 +142,80 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-4">
+                <div class="card main-card">
+                    <div class="card-header">
+                        <h5><i class="fa-solid fa-crystal-ball me-2"></i>Price Prediction (24h)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="predictionContainer">
+                            <div class="text-center mb-3">
+                                <span class="selected-stock-name">AAPL</span>
+                                <div class="prediction-price">
+                                    <span id="currentPrice">$184.37</span>
+                                    <i class="fa-solid fa-arrow-right mx-2"></i>
+                                    <span id="predictedPrice" class="predicted-price-up">$186.21</span>
+                                </div>
+                            </div>
+
+                            <div class="prediction-card">
+                                <div class="prediction-header">
+                                    <i class="fa-solid fa-chart-pie me-2"></i>
+                                    <span>Prediction Factors</span>
+                                </div>
+                                <div class="prediction-body">
+                                    <div class="prediction-factor">
+                                        <span class="factor-name">Sentiment Trend:</span>
+                                        <span class="factor-value positive">Positive</span>
+                                    </div>
+                                    <div class="prediction-factor">
+                                        <span class="factor-name">Market Momentum:</span>
+                                        <span class="factor-value positive">Bullish</span>
+                                    </div>
+                                    <div class="prediction-factor">
+                                        <span class="factor-name">News Impact:</span>
+                                        <span class="factor-value neutral">Neutral</span>
+                                    </div>
+                                    <div class="prediction-factor">
+                                        <span class="factor-name">Historical Pattern:</span>
+                                        <span class="factor-value positive">Uptrend</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="prediction-confidence mt-3">
+                                <span>Prediction Confidence</span>
+                                <div class="progress">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">75%</div>
+                                </div>
+                            </div>
+
+                            <div class="prediction-disclaimer mt-3">
+                                <small class="text-muted">
+                                    <i class="fa-solid fa-info-circle me-1"></i>
+                                    Prediction based on sentiment analysis and historical patterns. Not financial advice.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
+    <footer class="footer mt-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <p>© 2025 Sentiment Analysis Dashboard</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>Powered by Python, Flask & React</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script src="{{ url_for('static', path='/js/charts.js') }}"></script>
 </body>

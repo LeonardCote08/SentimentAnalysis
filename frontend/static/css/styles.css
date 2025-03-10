@@ -1,67 +1,429 @@
-/* frontend/static/css/styles.css */
+/* Variables CSS personnalisées */
+:root {
+    --primary-color: #3b82f6;
+    --primary-light: rgba(59, 130, 246, 0.1);
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #06b6d4;
+    --neutral-color: #6b7280;
+    --dark-bg: #111827;
+    --card-bg: #1f2937;
+    --card-header-bg: #1e293b;
+    --text-color: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Styles généraux */
+body {
+    background-color: #0f172a;
+    color: var(--text-color);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #1e293b;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    padding: 1rem 1.5rem;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+    .navbar-brand i {
+        color: var(--primary-color);
+        margin-right: 0.5rem;
+    }
+
+/* Cartes */
+.card {
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: var(--box-shadow);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background-color: var(--card-bg);
+    overflow: hidden;
+}
+
+    .card:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+.main-card {
+    border: 1px solid var(--border-color);
+}
+
+.card-header {
+    background-color: var(--card-header-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+    .card-header h5 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+    }
+
+    .card-header i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Stock cards */
 .stock-card {
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg);
 }
 
     .stock-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
     }
 
-.sentiment-positive {
-    color: #28a745;
-    background-color: rgba(40, 167, 69, 0.1);
-    border-color: rgba(40, 167, 69, 0.2);
-}
-
-.sentiment-negative {
-    color: #dc3545;
-    background-color: rgba(220, 53, 69, 0.1);
-    border-color: rgba(220, 53, 69, 0.2);
-}
-
-.sentiment-neutral {
-    color: #17a2b8;
-    background-color: rgba(23, 162, 184, 0.1);
-    border-color: rgba(23, 162, 184, 0.2);
-}
-
-.stock-selector.active {
-    background-color: #007bff;
-    color: white;
-}
-
-.sentiment-badge {
-    font-size: 0.8rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    display: inline-block;
-    margin-right: 0.5rem;
-}
-
-    .sentiment-badge.positive {
-        background-color: rgba(40, 167, 69, 0.1);
-        color: #28a745;
-        border: 1px solid rgba(40, 167, 69, 0.2);
+    .stock-card.sentiment-positive {
+        border-left: 4px solid var(--success-color);
     }
 
-    .sentiment-badge.negative {
-        background-color: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-        border: 1px solid rgba(220, 53, 69, 0.2);
+    .stock-card.sentiment-negative {
+        border-left: 4px solid var(--danger-color);
     }
 
-    .sentiment-badge.neutral {
-        background-color: rgba(23, 162, 184, 0.1);
-        color: #17a2b8;
-        border: 1px solid rgba(23, 162, 184, 0.2);
+    .stock-card.sentiment-neutral {
+        border-left: 4px solid var(--info-color);
     }
+
+.card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.price-info {
+    text-align: right;
+}
+
+.current-price {
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: block;
+}
+
+.price-change {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
 
 .price-change-positive {
-    color: #28a745;
+    color: var(--success-color);
 }
 
 .price-change-negative {
-    color: #dc3545;
+    color: var(--danger-color);
+}
+
+/* Badges & étiquettes de sentiment */
+.sentiment-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    display: inline-block;
+    font-weight: 600;
+}
+
+    .sentiment-badge.positive {
+        background-color: rgba(16, 185, 129, 0.15);
+        color: var(--success-color);
+    }
+
+    .sentiment-badge.negative {
+        background-color: rgba(239, 68, 68, 0.15);
+        color: var(--danger-color);
+    }
+
+    .sentiment-badge.neutral {
+        background-color: rgba(6, 182, 212, 0.15);
+        color: var(--info-color);
+    }
+
+/* Barres de progression */
+.progress {
+    height: 0.6rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 1rem;
+    margin: 0.5rem 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    border-radius: 1rem;
+}
+
+/* Filtres et boutons */
+.btn-primary, .btn-outline-primary {
+    transition: all 0.2s ease;
+}
+
+.period-filter .btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Tableau comparatif */
+.comparison-table {
+    width: 100%;
+    color: var(--text-color);
+}
+
+    .comparison-table thead th {
+        background-color: var(--card-header-bg);
+        color: var(--text-color);
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .comparison-table tbody td {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .comparison-table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+
+/* Section de prédiction */
+.prediction-price {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.predicted-price-up {
+    color: var(--success-color);
+}
+
+.predicted-price-down {
+    color: var(--danger-color);
+}
+
+.prediction-card {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.prediction-header {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.prediction-body {
+    padding: 1rem;
+}
+
+.prediction-factor {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.factor-name {
+    color: var(--text-muted);
+}
+
+.factor-value {
+    font-weight: 600;
+}
+
+    .factor-value.positive {
+        color: var(--success-color);
+    }
+
+    .factor-value.negative {
+        color: var(--danger-color);
+    }
+
+    .factor-value.neutral {
+        color: var(--info-color);
+    }
+
+.prediction-confidence {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.selected-stock-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Éléments récents */
+#recentItems .card {
+    margin-bottom: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+}
+
+#recentItems .card-body {
+    padding: 1rem;
+}
+
+#recentItems .card-title {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+#recentItems .text-muted {
+    font-size: 0.85rem;
+}
+
+/* Légende du graphique */
+#priceChartLegend {
+    font-size: 0.85rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 6px;
+}
+
+/* Notifications */
+#notification-area {
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+}
+
+.notification {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    animation: fadeIn 0.3s, fadeOut 0.3s 4.7s;
+    display: flex;
+    align-items: center;
+}
+
+    .notification.significant-change {
+        background-color: rgba(239, 68, 68, 0.2);
+        color: var(--danger-color);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+/* Footer */
+.footer {
+    background-color: var(--card-header-bg);
+    color: var(--text-muted);
+    padding: 1.5rem 0;
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 2rem;
+}
+
+/* Media queries pour responsive */
+@media (max-width: 768px) {
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+        .card-header h5 {
+            margin-bottom: 0.5rem;
+        }
+
+    .period-filter, .btn-group {
+        margin-top: 0.5rem;
+    }
+
+    .prediction-price {
+        font-size: 1.25rem;
+    }
+
+    .comparison-table {
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding: 0.75rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .prediction-price {
+        flex-direction: column;
+    }
+
+        .prediction-price i {
+            transform: rotate(90deg);
+            margin: 0.5rem 0;
+        }
 }

@@ -1,7 +1,7 @@
-// frontend/static/js/charts.js
 document.addEventListener('DOMContentLoaded', function () {
     // Variables globales
     let currentSymbol = 'AAPL';  // Symbole par défaut
+    let currentPeriod = 7;      // Période par défaut (7 jours)
 
     // Données de démonstration
     const demoData = {
@@ -19,7 +19,18 @@ document.addEventListener('DOMContentLoaded', function () {
             "current_price": 184.37,
             "previous_close": 180.75,
             "price_change": 3.62,
-            "price_change_pct": 2.00
+            "price_change_pct": 2.00,
+            "prediction": {
+                "price": 186.21,
+                "change_pct": 1.00,
+                "confidence": 75,
+                "factors": {
+                    "sentiment_trend": "positive",
+                    "market_momentum": "bullish",
+                    "news_impact": "neutral",
+                    "historical_pattern": "uptrend"
+                }
+            }
         },
         "TSLA": {
             "symbol": "TSLA",
@@ -35,7 +46,18 @@ document.addEventListener('DOMContentLoaded', function () {
             "current_price": 178.04,
             "previous_close": 182.43,
             "price_change": -4.39,
-            "price_change_pct": -2.41
+            "price_change_pct": -2.41,
+            "prediction": {
+                "price": 175.26,
+                "change_pct": -1.56,
+                "confidence": 68,
+                "factors": {
+                    "sentiment_trend": "negative",
+                    "market_momentum": "bearish",
+                    "news_impact": "negative",
+                    "historical_pattern": "downtrend"
+                }
+            }
         },
         "MSFT": {
             "symbol": "MSFT",
@@ -51,45 +73,156 @@ document.addEventListener('DOMContentLoaded', function () {
             "current_price": 417.22,
             "previous_close": 415.50,
             "price_change": 1.72,
-            "price_change_pct": 0.41
+            "price_change_pct": 0.41,
+            "prediction": {
+                "price": 421.39,
+                "change_pct": 1.00,
+                "confidence": 62,
+                "factors": {
+                    "sentiment_trend": "positive",
+                    "market_momentum": "neutral",
+                    "news_impact": "positive",
+                    "historical_pattern": "sideways"
+                }
+            }
         }
     };
 
     // Données d'historique de démonstration
-    const demoHistory = {
-        "sentiment_history": [
-            { "date": "2025-03-04", "average_sentiment": 0.15, "positive_pct": 45.0, "negative_pct": 30.0, "neutral_pct": 25.0, "count": 20 },
-            { "date": "2025-03-05", "average_sentiment": 0.22, "positive_pct": 48.0, "negative_pct": 25.0, "neutral_pct": 27.0, "count": 22 },
-            { "date": "2025-03-06", "average_sentiment": 0.18, "positive_pct": 46.0, "negative_pct": 29.0, "neutral_pct": 25.0, "count": 24 },
-            { "date": "2025-03-07", "average_sentiment": 0.25, "positive_pct": 50.0, "negative_pct": 20.0, "neutral_pct": 30.0, "count": 25 },
-            { "date": "2025-03-08", "average_sentiment": 0.30, "positive_pct": 53.0, "negative_pct": 18.0, "neutral_pct": 29.0, "count": 28 },
-            { "date": "2025-03-09", "average_sentiment": 0.32, "positive_pct": 54.0, "negative_pct": 16.0, "neutral_pct": 30.0, "count": 30 },
-            { "date": "2025-03-10", "average_sentiment": 0.35, "positive_pct": 56.0, "negative_pct": 22.0, "neutral_pct": 22.0, "count": 32 }
-        ],
-        "price_history": [
-            { "date": "2025-03-04", "open": 175.12, "high": 178.32, "low": 174.89, "close": 176.28, "volume": 12458900 },
-            { "date": "2025-03-05", "open": 176.45, "high": 179.65, "low": 175.87, "close": 177.93, "volume": 13567800 },
-            { "date": "2025-03-06", "open": 178.10, "high": 180.23, "low": 177.56, "close": 179.45, "volume": 11876500 },
-            { "date": "2025-03-07", "open": 179.67, "high": 182.14, "low": 179.11, "close": 181.78, "volume": 14325900 },
-            { "date": "2025-03-08", "open": 181.92, "high": 183.45, "low": 180.76, "close": 182.34, "volume": 10954300 },
-            { "date": "2025-03-09", "open": 182.56, "high": 184.21, "low": 181.89, "close": 183.67, "volume": 11234500 },
-            { "date": "2025-03-10", "open": 183.78, "high": 185.43, "low": 183.12, "close": 184.37, "volume": 13456700 }
-        ]
+    const generateHistoryData = (symbol, days) => {
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - days);
+
+        let basePrice, sentimentTrend, volatility;
+
+        // Valeurs de référence selon le symbole
+        switch (symbol) {
+            case 'AAPL':
+                basePrice = 176;
+                sentimentTrend = 0.15;
+                volatility = 0.8;
+                break;
+            case 'TSLA':
+                basePrice = 180;
+                sentimentTrend = -0.1;
+                volatility = 2.5;
+                break;
+            case 'MSFT':
+                basePrice = 410;
+                sentimentTrend = 0.2;
+                volatility = 1.2;
+                break;
+            default:
+                basePrice = 100;
+                sentimentTrend = 0;
+                volatility = 1;
+        }
+
+        const sentimentHistory = [];
+        const priceHistory = [];
+
+        // Générer les données d'historique
+        for (let i = 0; i <= days; i++) {
+            const date = new Date(startDate);
+            date.setDate(date.getDate() + i);
+            const dateStr = date.toISOString().split('T')[0];
+
+            // Calculer les valeurs avec des tendances et variations aléatoires
+            const dayRatio = i / days; // 0 à 1 pour la progression dans le temps
+            const randomFactor = Math.random() * 2 - 1; // -1 à 1 pour l'aléatoire
+
+            // Sentiment: commence à une valeur de base et se déplace vers la valeur cible
+            let sentiment;
+            if (symbol === 'AAPL') {
+                sentiment = 0.1 + dayRatio * 0.25 + randomFactor * 0.1;
+            } else if (symbol === 'TSLA') {
+                sentiment = 0.05 - dayRatio * 0.2 + randomFactor * 0.15;
+            } else {
+                sentiment = 0.15 + dayRatio * 0.1 + randomFactor * 0.1;
+            }
+            sentiment = Math.max(-0.8, Math.min(0.8, sentiment)); // Limiter entre -0.8 et 0.8
+
+            // Pourcentages de sentiment
+            let positivePct, negativePct, neutralPct;
+            if (sentiment > 0) {
+                positivePct = 40 + sentiment * 50;
+                negativePct = 30 - sentiment * 25;
+                neutralPct = 100 - positivePct - negativePct;
+            } else {
+                negativePct = 40 + Math.abs(sentiment) * 50;
+                positivePct = 30 - Math.abs(sentiment) * 25;
+                neutralPct = 100 - positivePct - negativePct;
+            }
+
+            // Prix: commence à basePrice et varie selon le sentiment et l'aléatoire
+            const price = basePrice * (1 + dayRatio * (sentiment + 0.05) + randomFactor * 0.01 * volatility);
+
+            // Ajouter à l'historique
+            sentimentHistory.push({
+                date: dateStr,
+                average_sentiment: sentiment,
+                positive_pct: positivePct,
+                negative_pct: negativePct,
+                neutral_pct: neutralPct,
+                count: Math.round(20 + 15 * dayRatio + randomFactor * 5)
+            });
+
+            priceHistory.push({
+                date: dateStr,
+                open: price * (1 - 0.005 * Math.random()),
+                high: price * (1 + 0.01 * Math.random()),
+                low: price * (1 - 0.01 * Math.random()),
+                close: price,
+                volume: Math.round(10000000 + 5000000 * Math.random())
+            });
+        }
+
+        return {
+            sentiment_history: sentimentHistory,
+            price_history: priceHistory
+        };
     };
 
     // Initialiser le dashboard avec des données de démonstration
     renderStockCards(demoData);
-    setActiveSymbol('AAPL');
-    renderSentimentChart(demoHistory.sentiment_history, 'AAPL');
-    renderPriceChart(demoHistory.price_history, 'AAPL');
+    renderComparisonTable(demoData);
+    const historyData = generateHistoryData('AAPL', 7);
+    renderSentimentChart(historyData.sentiment_history, 'AAPL');
+    renderPriceChart(historyData.price_history, 'AAPL', demoData['AAPL'].prediction);
+    updatePrediction('AAPL', demoData['AAPL']);
+    displayRecentItems('AAPL');
 
     // Configurer les écouteurs d'événements
     document.querySelectorAll('.stock-selector').forEach(button => {
         button.addEventListener('click', function () {
             const symbol = this.getAttribute('data-symbol');
             setActiveSymbol(symbol);
-            renderSentimentChart(demoHistory.sentiment_history, symbol);
-            renderPriceChart(demoHistory.price_history, symbol);
+
+            // Générer et afficher les données pour la période actuelle
+            const historyData = generateHistoryData(symbol, currentPeriod);
+            renderSentimentChart(historyData.sentiment_history, symbol);
+            renderPriceChart(historyData.price_history, symbol, demoData[symbol].prediction);
+            updatePrediction(symbol, demoData[symbol]);
+            displayRecentItems(symbol);
+
+            // Afficher une notification de changement significatif pour TSLA
+            if (symbol === 'TSLA' && Math.random() > 0.5) {
+                showNotification('significant-change', 'Significant change detected in TSLA sentiment (-15% in 24h)');
+            }
+        });
+    });
+
+    // Configurer les écouteurs pour les filtres de période
+    document.querySelectorAll('.period-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const period = parseInt(this.getAttribute('data-period'));
+            setActivePeriod(period);
+
+            // Régénérer et afficher les données pour la nouvelle période
+            const historyData = generateHistoryData(currentSymbol, period);
+            renderSentimentChart(historyData.sentiment_history, currentSymbol);
+            renderPriceChart(historyData.price_history, currentSymbol, demoData[currentSymbol].prediction);
         });
     });
 
@@ -98,11 +231,47 @@ document.addEventListener('DOMContentLoaded', function () {
         this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Refreshing...';
 
         setTimeout(() => {
+            // Mettre à jour l'heure
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('lastUpdateTime').textContent = `Today ${timeString}`;
+
+            // Recréer les données avec de légères variations
+            Object.keys(demoData).forEach(symbol => {
+                demoData[symbol].average_sentiment += (Math.random() * 0.1 - 0.05);
+                demoData[symbol].current_price *= (1 + (Math.random() * 0.02 - 0.01));
+                demoData[symbol].price_change = demoData[symbol].current_price - demoData[symbol].previous_close;
+                demoData[symbol].price_change_pct = (demoData[symbol].price_change / demoData[symbol].previous_close * 100);
+
+                // Ajuster les pourcentages
+                const sentShift = Math.random() * 6 - 3;
+                demoData[symbol].positive_pct += sentShift;
+                demoData[symbol].negative_pct -= sentShift / 2;
+                demoData[symbol].neutral_pct -= sentShift / 2;
+
+                // Mettre à jour les prédictions
+                const predShift = Math.random() * 2 - 1;
+                demoData[symbol].prediction.price *= (1 + predShift * 0.01);
+                demoData[symbol].prediction.confidence = Math.min(95, Math.max(50, demoData[symbol].prediction.confidence + predShift * 5));
+            });
+
+            // Mettre à jour l'interface
             renderStockCards(demoData);
-            renderSentimentChart(demoHistory.sentiment_history, currentSymbol);
-            renderPriceChart(demoHistory.price_history, currentSymbol);
+            renderComparisonTable(demoData);
+            const historyData = generateHistoryData(currentSymbol, currentPeriod);
+            renderSentimentChart(historyData.sentiment_history, currentSymbol);
+            renderPriceChart(historyData.price_history, currentSymbol, demoData[currentSymbol].prediction);
+            updatePrediction(currentSymbol, demoData[currentSymbol]);
+
+            // Réactiver le bouton
             this.disabled = false;
-            this.textContent = 'Refresh Data';
+            this.innerHTML = '<i class="fa-solid fa-sync-alt me-1"></i> Refresh Data';
+
+            // Montrer une notification aléatoirement
+            if (Math.random() > 0.7) {
+                const randomSymbol = Object.keys(demoData)[Math.floor(Math.random() * 3)];
+                showNotification('significant-change', `Significant change detected in ${randomSymbol} sentiment (+12% in 6h)`);
+            }
         }, 1500);
     });
 
@@ -152,17 +321,60 @@ document.addEventListener('DOMContentLoaded', function () {
             card.querySelector('.stock-card').addEventListener('click', function () {
                 const symbol = this.getAttribute('data-symbol');
                 setActiveSymbol(symbol);
-                renderSentimentChart(demoHistory.sentiment_history, symbol);
-                renderPriceChart(demoHistory.price_history, symbol);
+
+                const historyData = generateHistoryData(symbol, currentPeriod);
+                renderSentimentChart(historyData.sentiment_history, symbol);
+                renderPriceChart(historyData.price_history, symbol, demoData[symbol].prediction);
+                updatePrediction(symbol, demoData[symbol]);
+                displayRecentItems(symbol);
             });
 
             container.appendChild(card);
         });
     }
 
+    // Rendre le tableau comparatif
+    function renderComparisonTable(data) {
+        const tbody = document.getElementById('comparisonTableBody');
+        tbody.innerHTML = '';
+
+        Object.keys(data).forEach(symbol => {
+            const stock = data[symbol];
+            const row = document.createElement('tr');
+
+            // Définir les classes de sentiment et de prix
+            const sentClass = stock.average_sentiment >= 0.05 ? 'text-success' :
+                stock.average_sentiment <= -0.05 ? 'text-danger' : 'text-info';
+            const priceClass = stock.price_change >= 0 ? 'text-success' : 'text-danger';
+            const predClass = stock.prediction.change_pct >= 0 ? 'text-success' : 'text-danger';
+
+            row.innerHTML = `
+                <td><strong>${symbol}</strong></td>
+                <td>$${stock.current_price.toFixed(2)}</td>
+                <td class="${priceClass}">${stock.price_change >= 0 ? '+' : ''}${stock.price_change.toFixed(2)} (${stock.price_change_pct.toFixed(2)}%)</td>
+                <td class="${sentClass}">${stock.average_sentiment.toFixed(2)}</td>
+                <td>${stock.positive_pct.toFixed(1)}%</td>
+                <td>${stock.negative_pct.toFixed(1)}%</td>
+                <td>${stock.neutral_pct.toFixed(1)}%</td>
+                <td>${stock.count}</td>
+                <td class="${predClass}">
+                    $${stock.prediction.price.toFixed(2)}
+                    <small>(${stock.prediction.change_pct >= 0 ? '+' : ''}${stock.prediction.change_pct.toFixed(2)}%)</small>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    }
+
     // Rendre le graphique de sentiment
     function renderSentimentChart(data, symbol) {
         const container = document.getElementById('sentimentChart');
+
+        if (data.length === 0) {
+            container.innerHTML = `<p class="text-center">No sentiment data available for ${symbol}</p>`;
+            return;
+        }
 
         const dates = data.map(item => item.date);
         const sentiments = data.map(item => item.average_sentiment);
@@ -234,28 +446,74 @@ document.addEventListener('DOMContentLoaded', function () {
                 r: 50,
                 t: 50,
                 b: 80
-            }
+            },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            font: {
+                color: '#f3f4f6'
+            },
+            showlegend: true
         };
 
         Plotly.newPlot(container, [trace1, trace2, trace3], layout);
     }
 
-    // Rendre le graphique de prix
-    function renderPriceChart(data, symbol) {
+    // Rendre le graphique de prix avec prédiction
+    function renderPriceChart(data, symbol, prediction) {
         const container = document.getElementById('priceChart');
+
+        if (data.length === 0) {
+            container.innerHTML = `<p class="text-center">No price data available for ${symbol}</p>`;
+            return;
+        }
 
         const dates = data.map(item => item.date);
         const prices = data.map(item => item.close);
 
-        const trace = {
+        // Créer des dates et prix de prédiction
+        const lastDate = new Date(dates[dates.length - 1]);
+        const predictionDates = [];
+        const predictionPrices = [];
+
+        // Générer 3 jours de prédiction
+        for (let i = 1; i <= 3; i++) {
+            const nextDate = new Date(lastDate);
+            nextDate.setDate(nextDate.getDate() + i);
+            const dateStr = nextDate.toISOString().split('T')[0];
+            predictionDates.push(dateStr);
+
+            const lastPrice = prices[prices.length - 1];
+            const priceDiff = prediction.price - lastPrice;
+            const step = priceDiff / 3;
+            predictionPrices.push(lastPrice + step * i);
+        }
+
+        // Combiner avec le dernier point connu pour une transition fluide
+        predictionDates.unshift(dates[dates.length - 1]);
+        predictionPrices.unshift(prices[prices.length - 1]);
+
+        const trace1 = {
             x: dates,
             y: prices,
             type: 'scatter',
             mode: 'lines',
-            name: 'Close Price',
+            name: 'Actual Price',
             line: {
                 color: 'rgb(75, 75, 192)',
                 width: 2
+            }
+        };
+
+        const trace2 = {
+            x: predictionDates,
+            y: predictionPrices,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Predicted Price',
+            line: {
+                color: 'rgba(75, 192, 75, 0.5)',
+                width: 2,
+                dash: 'dot'
             }
         };
 
@@ -272,10 +530,164 @@ document.addEventListener('DOMContentLoaded', function () {
                 r: 40,
                 t: 50,
                 b: 80
-            }
+            },
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            font: {
+                color: '#f3f4f6'
+            },
+            showlegend: false
         };
 
-        Plotly.newPlot(container, [trace], layout);
+        Plotly.newPlot(container, [trace1, trace2], layout);
+    }
+
+    // Mettre à jour la section de prédiction
+    function updatePrediction(symbol, data) {
+        document.querySelector('.selected-stock-name').textContent = symbol;
+
+        // Mettre à jour les prix actuels et prédits
+        document.getElementById('currentPrice').textContent = `$${data.current_price.toFixed(2)}`;
+        document.getElementById('predictedPrice').textContent = `$${data.prediction.price.toFixed(2)}`;
+
+        // Changer la classe selon la direction de la prédiction
+        const predictedPrice = document.getElementById('predictedPrice');
+        if (data.prediction.price > data.current_price) {
+            predictedPrice.className = 'predicted-price-up';
+        } else {
+            predictedPrice.className = 'predicted-price-down';
+        }
+
+        // Mettre à jour les facteurs
+        const factors = data.prediction.factors;
+        document.querySelectorAll('.prediction-factor').forEach((factor, index) => {
+            const factorValue = factor.querySelector('.factor-value');
+
+            switch (index) {
+                case 0: // Sentiment Trend
+                    factorValue.textContent = capitalize(factors.sentiment_trend);
+                    factorValue.className = `factor-value ${factors.sentiment_trend}`;
+                    break;
+                case 1: // Market Momentum
+                    factorValue.textContent = capitalize(factors.market_momentum);
+                    factorValue.className = `factor-value ${factors.market_momentum === 'bullish' ? 'positive' : factors.market_momentum === 'bearish' ? 'negative' : 'neutral'}`;
+                    break;
+                case 2: // News Impact
+                    factorValue.textContent = capitalize(factors.news_impact);
+                    factorValue.className = `factor-value ${factors.news_impact}`;
+                    break;
+                case 3: // Historical Pattern
+                    factorValue.textContent = capitalize(factors.historical_pattern);
+                    factorValue.className = `factor-value ${factors.historical_pattern === 'uptrend' ? 'positive' : factors.historical_pattern === 'downtrend' ? 'negative' : 'neutral'}`;
+                    break;
+            }
+        });
+
+        // Mettre à jour la jauge de confiance
+        const confidenceBar = document.querySelector('.prediction-confidence .progress-bar');
+        confidenceBar.style.width = `${data.prediction.confidence}%`;
+        confidenceBar.textContent = `${data.prediction.confidence}%`;
+    }
+
+    // Afficher des éléments récents de sentiment
+    function displayRecentItems(symbol) {
+        const container = document.getElementById('recentItems');
+
+        // Données d'exemple pour les éléments récents selon le symbole
+        const recentItemsData = {
+            'AAPL': [
+                {
+                    title: `${symbol} Announces New Product Line`,
+                    source: 'Yahoo Finance',
+                    date: '2025-03-10',
+                    sentiment: 0.42,
+                    label: 'positive'
+                },
+                {
+                    title: `Analysts Predict Strong Quarter for ${symbol}`,
+                    source: 'MarketWatch',
+                    date: '2025-03-09',
+                    sentiment: 0.38,
+                    label: 'positive'
+                },
+                {
+                    title: `${symbol} Faces Supply Chain Challenges`,
+                    source: 'Bloomberg',
+                    date: '2025-03-08',
+                    sentiment: -0.25,
+                    label: 'negative'
+                }
+            ],
+            'TSLA': [
+                {
+                    title: `${symbol} Stock Falls as Competitors Gain Market Share`,
+                    source: 'Reuters',
+                    date: '2025-03-10',
+                    sentiment: -0.35,
+                    label: 'negative'
+                },
+                {
+                    title: `New Factory Delays for ${symbol}`,
+                    source: 'Wall Street Journal',
+                    date: '2025-03-09',
+                    sentiment: -0.28,
+                    label: 'negative'
+                },
+                {
+                    title: `${symbol} Innovation Continues Despite Challenges`,
+                    source: 'TechCrunch',
+                    date: '2025-03-08',
+                    sentiment: 0.15,
+                    label: 'positive'
+                }
+            ],
+            'MSFT': [
+                {
+                    title: `${symbol} Cloud Service Growth Exceeds Expectations`,
+                    source: 'CNBC',
+                    date: '2025-03-10',
+                    sentiment: 0.31,
+                    label: 'positive'
+                },
+                {
+                    title: `New Partnership Announced for ${symbol}`,
+                    source: 'Business Insider',
+                    date: '2025-03-09',
+                    sentiment: 0.22,
+                    label: 'positive'
+                },
+                {
+                    title: `${symbol} Faces Regulatory Scrutiny in EU`,
+                    source: 'Financial Times',
+                    date: '2025-03-08',
+                    sentiment: -0.18,
+                    label: 'negative'
+                }
+            ]
+        };
+
+        const recentItems = recentItemsData[symbol] || recentItemsData['AAPL'];
+
+        let html = `<h6 class="mb-3">Recent mentions of ${symbol}</h6>`;
+
+        recentItems.forEach(item => {
+            const badgeClass = item.label === 'positive' ? 'positive' : item.label === 'negative' ? 'negative' : 'neutral';
+            html += `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="card-title">${item.title}</h6>
+                            <span class="sentiment-badge ${badgeClass}">${item.label}</span>
+                        </div>
+                        <div class="small text-muted">
+                            Source: ${item.source} | Date: ${item.date}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        container.innerHTML = html;
     }
 
     // Définir le symbole actif
@@ -301,60 +713,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 card.classList.remove('border-primary');
             }
         });
-
-        // Ajouter quelques éléments récents de sentiment
-        displayRecentItems(symbol);
     }
 
-    // Afficher des éléments récents de sentiment
-    function displayRecentItems(symbol) {
-        const container = document.getElementById('recentItems');
+    // Définir la période active
+    function setActivePeriod(period) {
+        currentPeriod = period;
 
-        // Données d'exemple pour les éléments récents
-        const recentItems = [
-            {
-                title: `${symbol} Announces New Product Line`,
-                source: 'Yahoo Finance',
-                date: '2025-03-10',
-                sentiment: 0.42,
-                label: 'positive'
-            },
-            {
-                title: `Analysts Predict Strong Quarter for ${symbol}`,
-                source: 'MarketWatch',
-                date: '2025-03-09',
-                sentiment: 0.38,
-                label: 'positive'
-            },
-            {
-                title: `${symbol} Faces Supply Chain Challenges`,
-                source: 'Bloomberg',
-                date: '2025-03-08',
-                sentiment: -0.25,
-                label: 'negative'
+        // Mettre à jour l'état actif des boutons
+        document.querySelectorAll('.period-btn').forEach(button => {
+            const buttonPeriod = parseInt(button.getAttribute('data-period'));
+            if (buttonPeriod === period) {
+                button.classList.add('active');
+            } else {
+                button.classList.remove('active');
             }
-        ];
-
-        let html = `<h6 class="mb-3">Recent mentions of ${symbol}</h6>`;
-
-        recentItems.forEach(item => {
-            const badgeClass = item.label === 'positive' ? 'positive' : item.label === 'negative' ? 'negative' : 'neutral';
-            html += `
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <h6 class="card-title">${item.title}</h6>
-                            <span class="sentiment-badge ${badgeClass}">${item.label}</span>
-                        </div>
-                        <div class="small text-muted">
-                            Source: ${item.source} | Date: ${item.date}
-                        </div>
-                    </div>
-                </div>
-            `;
         });
+    }
 
-        container.innerHTML = html;
+    // Afficher une notification
+    function showNotification(type, message) {
+        const notificationArea = document.getElementById('notification-area');
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.innerHTML = `<i class="fa-solid fa-exclamation-triangle me-2"></i>${message}`;
+
+        notificationArea.innerHTML = '';
+        notificationArea.appendChild(notification);
+
+        // Supprimer la notification après 5 secondes
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // Helper: Capitalize first letter
+    function capitalize(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
     // Obtenir la classe CSS basée sur le sentiment
